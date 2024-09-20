@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Talk - Login</title>
+    <title>Home Talk - Admin Panel</title>
     <style>
         :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #45a049;
+            --primary-color: #3F51B5;
+            --secondary-color: #303F9F;
             --text-color: #333;
             --bg-color: #f4f4f4;
             --card-bg-color: #ffffff;
@@ -23,12 +23,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-image: url('/images/background.jpeg');
+            min-height: 100vh;
+            background-image: url('/images/admin-background.jpeg');
             background-size: cover;
             background-position: center;
         }
-        .login-container {
+        .container {
             background-color: var(--card-bg-color);
             padding: 2rem;
             border-radius: 15px;
@@ -41,21 +41,21 @@
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .login-header {
+        .header {
             text-align: center;
             margin-bottom: 2rem;
         }
-        .login-header img {
+        .header img {
             width: 80px;
             height: auto;
             border-radius: 50%;
             margin-bottom: 1rem;
         }
-        .login-header h1 {
+        .header h1 {
             color: var(--primary-color);
             margin: 0;
         }
-        .login-form {
+        .form {
             display: flex;
             flex-direction: column;
         }
@@ -93,130 +93,167 @@
             background-color: var(--secondary-color);
             transform: translateY(-2px);
         }
-        .forgot-password {
+        .toggle-form {
             text-align: center;
             margin-top: 1rem;
         }
-        .forgot-password a {
+        .toggle-form a {
             color: var(--primary-color);
             text-decoration: none;
             font-size: 0.9rem;
             transition: color 0.3s ease;
         }
-        .forgot-password a:hover {
+        .toggle-form a:hover {
             color: var(--secondary-color);
             text-decoration: underline;
         }
         @media (max-width: 480px) {
-            .login-container {
+            .container {
                 padding: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <form id="loginFormInner">
-        <div class="login-header">
-            <img src="/images/logo.png" alt="Home Talk Logo">
-            <h1>Home Talk</h1>
+    <div class="container">
+        <div class="header">
+            <img src="/images/admin-logo.png" alt="Home Talk Admin Logo">
+            <h1>Home Talk Admin</h1>
         </div>
-        <form class="login-form">
+        
+        <!-- Login Form -->
+        <form id="loginForm" class="form">
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required placeholder="Enter your email">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" name="email" required placeholder="Enter your email">
             </div>
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Enter your password">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" name="password" required placeholder="Enter your password">
             </div>
             <button type="submit" class="submit-btn">Log In</button>
         </form>
-        <div class="forgot-password">
-            <a href="#" id="forgot-password-link">Forgot Password?</a>
-        </div>
+        
+        <!-- Sign Up Form (initially hidden) -->
+        <form id="signupForm" class="form" style="display: none;">
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" name="email" required placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" name="password" required placeholder="Enter your password">
+            </div>
+            <div class="form-group">
+                <label for="adminCode">Admin Code</label>
+                <input type="text" id="adminCode" name="adminCode" required placeholder="Enter admin code">
+            </div>
+            <button type="submit" class="submit-btn">Sign Up</button>
         </form>
+        
+        <div class="toggle-form">
+            <a href="#" id="toggleForm">Don't have an account? Sign up</a>
+        </div>
     </div>
         
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore , doc , getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-        import { getAuth , signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-analytics.js";
 
         const firebaseConfig = {
-        apiKey: "AIzaSyDqLcufSIP87WT1aEyDI-dKVdTsSBACrEc",
-        authDomain: "interactive-iot-devices-ssrip.firebaseapp.com",
-        projectId: "interactive-iot-devices-ssrip",
-        storageBucket: "interactive-iot-devices-ssrip.appspot.com",
-        messagingSenderId: "180311183138",
-        appId: "1:180311183138:web:4dc86677633cf5f1d8df7b",
-        measurementId: "G-6PTBDPMY0S"
+            apiKey: "AIzaSyDqLcufSIP87WT1aEyDI-dKVdTsSBACrEc",
+            authDomain: "interactive-iot-devices-ssrip.firebaseapp.com",
+            projectId: "interactive-iot-devices-ssrip",
+            storageBucket: "interactive-iot-devices-ssrip.appspot.com",
+            messagingSenderId: "180311183138",
+            appId: "1:180311183138:web:4dc86677633cf5f1d8df7b",
+            measurementId: "G-6PTBDPMY0S"
         };
 
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
-
         const db = getFirestore();
         const auth = getAuth(app);
 
-        let EmailInp = document.getElementById('email');
-        let PassInp = document.getElementById('password');
-        let MainForm = document.getElementById('loginFormInner');
-        let ForgotPasswordLink = document.getElementById('forgot-password-link');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const toggleFormLink = document.getElementById('toggleForm');
 
-        // Function to handle user sign-in
-        let SignInUser = evt => {
-            evt.preventDefault();
-            signInWithEmailAndPassword(auth, EmailInp.value, PassInp.value)
-            .then(async (credentials) => {
-                var ref = doc(db, "users", credentials.user.uid);
-                const docSnap = await getDoc(ref);
+        // Toggle between login and signup forms
+        toggleFormLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'flex';
+                signupForm.style.display = 'none';
+                toggleFormLink.textContent = "Don't have an account? Sign up";
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'flex';
+                toggleFormLink.textContent = "Already have an account? Log in";
+            }
+        });
 
-                if (docSnap.exists()) {
-                    sessionStorage.setItem("user-info", JSON.stringify({
-                        firstname: docSnap.data().firstname,
-                        lastname: docSnap.data().lastname,
-                        email: docSnap.data().email,
-                        mobilenumber: docSnap.data().mobilenumber
-                    }));
-                    sessionStorage.setItem("user-creds", JSON.stringify(credentials.user));
-                    window.location.href = "./dashboard.html";
-                }
-                console.log(credentials);
-            })
-            .catch((error) => {
-                alert(error.message);
-                console.log(error.code);
-                console.log(error.message);
-            });
-        };
+        // Handle Login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-        // Function to handle password reset
-        let ForgotPassword = evt => {
-            evt.preventDefault();
-            const email = EmailInp.value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    const docRef = doc(db, "admins", user.uid);
+                    const docSnap = await getDoc(docRef);
 
-            if (email) {
-                sendPasswordResetEmail(auth, email)
-                .then(() => {
-                    alert('Password reset email sent! Check your inbox.');
+                    if (docSnap.exists() && docSnap.data().isAdmin) {
+                        console.log("Admin logged in successfully");
+                        // Redirect to admin dashboard or set admin session
+                        window.location.href = "./admin-dashboard.html";
+                    } else {
+                        alert("You don't have admin privileges.");
+                        auth.signOut();
+                    }
                 })
                 .catch((error) => {
-                    alert(error.message);
-                    console.log(error.code);
-                    console.log(error.message);
+                    console.error("Error logging in: ", error);
+                    alert("Login failed. Please check your credentials.");
                 });
-            } else {
-                alert('Please enter your email address first.');
-            }
-        };
+        });
 
-        // Event listeners
-        MainForm.addEventListener('submit', SignInUser);
-        ForgotPasswordLink.addEventListener('click', ForgotPassword);
+        // Handle Signup
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const adminCode = document.getElementById('adminCode').value;
+
+            // You should replace 'YOUR_ADMIN_CODE' with an actual secure admin code
+            if (adminCode !== '12345') {
+                alert("Invalid admin code.");
+                return;
+            }
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    await setDoc(doc(db, "admins", user.uid), {
+                        email: email,
+                        isAdmin: true
+                    });
+                    console.log("Admin account created successfully");
+                    alert("Admin account created. You can now log in.");
+                    // Switch to login form
+                    loginForm.style.display = 'flex';
+                    signupForm.style.display = 'none';
+                    toggleFormLink.textContent = "Don't have an account? Sign up";
+                })
+                .catch((error) => {
+                    console.error("Error creating admin account: ", error);
+                    alert("Failed to create admin account. Please try again.");
+                });
+        });
     </script>
 </body>
 </html>
